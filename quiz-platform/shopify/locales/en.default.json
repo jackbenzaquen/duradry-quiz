@@ -1,0 +1,8 @@
+{
+  "duradry_quiz": {
+    "email": "Email",
+    "unavailable": "This quiz is temporarily unavailable. Please try again later.",
+    "enable_javascript": "Please enable JavaScript to take the quiz.",
+    "choose_flow": "Select a quiz flow in this section's settings."
+  }
+}

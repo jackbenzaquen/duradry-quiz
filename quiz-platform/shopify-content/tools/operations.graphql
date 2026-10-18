@@ -1,0 +1,21 @@
+query Definition($type: String!) {
+  metaobjectDefinitionByType(type: $type) { id type }
+}
+
+mutation CreateDefinition($definition: MetaobjectDefinitionCreateInput!) {
+  metaobjectDefinitionCreate(definition: $definition) {
+    metaobjectDefinition { id type }
+    userErrors { field message }
+  }
+}
+
+query Entry($handle: MetaobjectHandleInput!) {
+  metaobjectByHandle(handle: $handle) { id handle type fields { key jsonValue } }
+}
+
+mutation UpsertEntry($handle: MetaobjectHandleInput!, $metaobject: MetaobjectUpsertInput!) {
+  metaobjectUpsert(handle: $handle, metaobject: $metaobject) {
+    metaobject { id handle type }
+    userErrors { field message }
+  }
+}

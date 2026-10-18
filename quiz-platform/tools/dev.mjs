@@ -1,0 +1,5 @@
+import http from 'node:http';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const routes={collect:'../api/collect.mjs',report:'../api/report.mjs',auth:'../api/auth.mjs',sync:'../api/sync.mjs'};
+const server=http.createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost');if(url.pathname.startsWith('/api/')){const route=routes[url.pathname.slice(5)];if(!route){res.writeHead(404).end();return;}let body='';for await(const chunk of req){body+=chunk;if(body.length>32000){res.writeHead(413).end();return;}}req.body=body?JSON.parse(body):undefined;return (await import(route)).default(req,res);}const file=url.pathname==='/'?'index.html':url.pathname.slice(1);if(!/^[a-zA-Z0-9.-]+$/.test(file)){res.writeHead(404).end();return;}const content=await fs.readFile(path.join('public',file));res.setHeader('Content-Type',file.endsWith('.css')?'text/css':file.endsWith('.js')?'application/javascript':'text/html');res.end(content);}catch{res.writeHead(500).end('Request failed');}});server.listen(3000,()=>console.log('Dashboard at http://localhost:3000. Use secure Vercel preview for cookie authentication.'));

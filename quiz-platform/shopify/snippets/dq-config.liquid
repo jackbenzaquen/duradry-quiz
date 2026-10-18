@@ -1,0 +1,54 @@
+{% doc %}
+  @param {metaobject} quiz - The selected quiz flow.
+{% enddoc %}
+{
+  "id": {{ quiz.system.handle | json }},
+  "version": {{ quiz.version.value | json }},
+  "title": {{ quiz.title.value | json }},
+  "subtitle": {{ quiz.subtitle.value | json }},
+  "labels": {
+    {% assign label_keys = 'start_label,next_label,back_label,skip_label,finish_label,restart_label,result_heading,result_button,consent_label,privacy_note,configuration_error,required_error,submit_error,busy_label,preview_notice,progress_label,email_label' | split: ',' %}
+    {% for key in label_keys %}
+      {{ key | json }}: {{ quiz[key].value | json }}{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  },
+  "questions": [
+    {% for question in quiz.questions.value limit: 50 %}
+      {
+        "key": {{ question.answer_key.value | json }},
+        "title": {{ question.title.value | json }},
+        "helper": {{ question.helper.value | json }},
+        "kind": {{ question.input_type.value | json }},
+        "role": {{ question.contact_role.value | json }},
+        "placeholder": {{ question.placeholder.value | json }},
+        "required": {{ question.required.value | default: false | json }},
+        "auto": {{ question.auto_advance.value | default: false | json }},
+        "button": {{ question.button_label.value | json }},
+        "when": {% render 'dq-conditions', conditions: question.show_when.value %},
+        "options": [
+          {% for option in question.options.value limit: 50 %}
+            {
+              "value": {{ option.value.value | json }},
+              "label": {{ option.label.value | json }},
+              "image": {% if option.image.value != blank %}{{ option.image.value.preview_image | image_url: width: 600 | json }}{% else %}""{% endif %}
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "rules": [
+    {% for rule in quiz.rules.value limit: 50 %}
+      {% assign result = rule.result.value %}
+      {
+        "key": {{ rule.system.handle | json }},
+        "conditions": {% render 'dq-conditions', conditions: rule.conditions.value %},
+        "result": {
+          "key": {{ result.system.handle | json }},
+          "title": {{ result.title.value | json }},
+          "url": {{ result.page.value.url | json }}
+        }
+      }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}

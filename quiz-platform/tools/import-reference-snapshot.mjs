@@ -1,0 +1,3 @@
+import fs from 'node:fs/promises';import {getDb} from '../lib/db.mjs';
+const [file,apply]=process.argv.slice(2);if(!file)throw Error('Usage: REFERENCE_JSON [--apply]');const snapshot=JSON.parse(await fs.readFile(file));if(!snapshot.id||!snapshot.quiz_id||!snapshot.captured_at)throw Error('Invalid snapshot');
+if(apply!=='--apply'){console.log('Dry run: '+snapshot.id);process.exit(0);}await getDb().query('INSERT INTO quiz_reference_snapshots(id,quiz_id,captured_at,payload) VALUES($1,$2,$3,$4::jsonb) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload',[snapshot.id,snapshot.quiz_id,snapshot.captured_at,JSON.stringify(snapshot)]);console.log('Saved dated vendor snapshot; not included in dynamic session totals.');

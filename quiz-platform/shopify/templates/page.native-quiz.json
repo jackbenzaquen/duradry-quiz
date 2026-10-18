@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "duradry-native-quiz",
+      "settings": {"capture_mode": "preview"}
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,12 @@
+{% doc %}
+  @param {metaobject[]} conditions - Quiz condition metaobjects.
+{% enddoc %}
+[
+  {% for condition in conditions limit: 50 %}
+    {
+      "key": {{ condition.answer_key.value | json }},
+      "mode": {{ condition.match_mode.value | json }},
+      "values": {{ condition.values.value | json }}
+    }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+]

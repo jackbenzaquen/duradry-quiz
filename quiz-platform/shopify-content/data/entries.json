@@ -1,0 +1,672 @@
+[
+  {
+    "type": "dd_quiz_option",
+    "handle": "gift-cream",
+    "fields": {
+      "name": "Gift cream",
+      "label": "Clean Cream",
+      "value": "cream"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "gift-red",
+    "fields": {
+      "name": "Gift red",
+      "label": "Signature Red",
+      "value": "red"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "dry-underarms",
+    "fields": {
+      "name": "Dry underarms",
+      "label": "Underarms",
+      "value": "underarms"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "dry-body",
+    "fields": {
+      "name": "Dry body",
+      "label": "Body",
+      "value": "body"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "dry-privates",
+    "fields": {
+      "name": "Dry privates",
+      "label": "Privates",
+      "value": "privates"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "dry-hands-feet",
+    "fields": {
+      "name": "Dry hands feet",
+      "label": "Hands/Feet",
+      "value": "hands-feet"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-23-under",
+    "fields": {
+      "name": "Age 23 under",
+      "label": "23 or under",
+      "value": "23-under"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-24-29",
+    "fields": {
+      "name": "Age 24 29",
+      "label": "24-29",
+      "value": "24-29"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-30-34",
+    "fields": {
+      "name": "Age 30 34",
+      "label": "30-34",
+      "value": "30-34"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-35-40",
+    "fields": {
+      "name": "Age 35 40",
+      "label": "35-40",
+      "value": "35-40"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-41-50",
+    "fields": {
+      "name": "Age 41 50",
+      "label": "41-50",
+      "value": "41-50"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "age-51-plus",
+    "fields": {
+      "name": "Age 51 plus",
+      "label": "51 or older",
+      "value": "51-plus"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "odor-underarms",
+    "fields": {
+      "name": "Odor underarms",
+      "label": "Underarms",
+      "value": "underarms"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "odor-body",
+    "fields": {
+      "name": "Odor body",
+      "label": "Body",
+      "value": "body"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "odor-privates",
+    "fields": {
+      "name": "Odor privates",
+      "label": "Privates",
+      "value": "privates"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "odor-feet",
+    "fields": {
+      "name": "Odor feet",
+      "label": "Feet",
+      "value": "feet"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "gender-male",
+    "fields": {
+      "name": "Gender male",
+      "label": "Male",
+      "value": "male"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "gender-female",
+    "fields": {
+      "name": "Gender female",
+      "label": "Female",
+      "value": "female"
+    }
+  },
+  {
+    "type": "dd_quiz_option",
+    "handle": "gender-not-shared",
+    "fields": {
+      "name": "Gender not shared",
+      "label": "Prefer not to share",
+      "value": "not-shared"
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "gift",
+    "fields": {
+      "name": "Gift",
+      "answer_key": "gift",
+      "title": "Pick your FREE gift!",
+      "input_type": "single",
+      "required": true,
+      "auto_advance": true,
+      "contact_role": "none",
+      "helper": "An elegant and durable neoprene toiletries bag for all your essentials. It's a $20 value for FREE!",
+      "options": [
+        {
+          "$ref": "dd_quiz_option/gift-cream"
+        },
+        {
+          "$ref": "dd_quiz_option/gift-red"
+        }
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "brand",
+    "fields": {
+      "name": "Brand",
+      "answer_key": "brand",
+      "title": "Which deodorant brand are you currently using?",
+      "input_type": "text",
+      "required": false,
+      "auto_advance": false,
+      "contact_role": "none",
+      "placeholder": "Enter text"
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "dry",
+    "fields": {
+      "name": "Dry",
+      "answer_key": "dry",
+      "title": "Where do you need help staying dry?",
+      "input_type": "multiple",
+      "required": true,
+      "auto_advance": false,
+      "contact_role": "none",
+      "helper": "Select all that apply",
+      "options": [
+        {
+          "$ref": "dd_quiz_option/dry-underarms"
+        },
+        {
+          "$ref": "dd_quiz_option/dry-body"
+        },
+        {
+          "$ref": "dd_quiz_option/dry-privates"
+        },
+        {
+          "$ref": "dd_quiz_option/dry-hands-feet"
+        }
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "age",
+    "fields": {
+      "name": "Age",
+      "answer_key": "age",
+      "title": "How young are you?",
+      "input_type": "single",
+      "required": true,
+      "auto_advance": true,
+      "contact_role": "none",
+      "options": [
+        {
+          "$ref": "dd_quiz_option/age-23-under"
+        },
+        {
+          "$ref": "dd_quiz_option/age-24-29"
+        },
+        {
+          "$ref": "dd_quiz_option/age-30-34"
+        },
+        {
+          "$ref": "dd_quiz_option/age-35-40"
+        },
+        {
+          "$ref": "dd_quiz_option/age-41-50"
+        },
+        {
+          "$ref": "dd_quiz_option/age-51-plus"
+        }
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "odor",
+    "fields": {
+      "name": "Odor",
+      "answer_key": "odor",
+      "title": "Where do you need help eliminating odors?",
+      "input_type": "multiple",
+      "required": true,
+      "auto_advance": false,
+      "contact_role": "none",
+      "helper": "Select all that apply",
+      "options": [
+        {
+          "$ref": "dd_quiz_option/odor-underarms"
+        },
+        {
+          "$ref": "dd_quiz_option/odor-body"
+        },
+        {
+          "$ref": "dd_quiz_option/odor-privates"
+        },
+        {
+          "$ref": "dd_quiz_option/odor-feet"
+        }
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "gender",
+    "fields": {
+      "name": "Gender",
+      "answer_key": "gender",
+      "title": "What's your gender?",
+      "input_type": "single",
+      "required": true,
+      "auto_advance": true,
+      "contact_role": "none",
+      "options": [
+        {
+          "$ref": "dd_quiz_option/gender-male"
+        },
+        {
+          "$ref": "dd_quiz_option/gender-female"
+        },
+        {
+          "$ref": "dd_quiz_option/gender-not-shared"
+        }
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "email",
+    "fields": {
+      "name": "Email",
+      "answer_key": "email",
+      "title": "What is your email?",
+      "input_type": "email",
+      "required": true,
+      "auto_advance": false,
+      "contact_role": "email",
+      "helper": "Your email is used according to the privacy notice below.",
+      "placeholder": "Enter email"
+    }
+  },
+  {
+    "type": "dd_quiz_question",
+    "handle": "first-name",
+    "fields": {
+      "name": "First name",
+      "answer_key": "first-name",
+      "title": "What's your name?",
+      "input_type": "text",
+      "required": true,
+      "auto_advance": false,
+      "contact_role": "first_name",
+      "placeholder": "First name"
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "cream",
+    "fields": {
+      "name": "Cream",
+      "answer_key": "gift",
+      "match_mode": "exact",
+      "values": [
+        "cream"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "red",
+    "fields": {
+      "name": "Red",
+      "answer_key": "gift",
+      "match_mode": "exact",
+      "values": [
+        "red"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "underarms-only",
+    "fields": {
+      "name": "Underarms only",
+      "answer_key": "dry",
+      "match_mode": "exact",
+      "values": [
+        "underarms"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "has-underarms",
+    "fields": {
+      "name": "Has underarms",
+      "answer_key": "dry",
+      "match_mode": "any",
+      "values": [
+        "underarms"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "has-body-area",
+    "fields": {
+      "name": "Has body area",
+      "answer_key": "dry",
+      "match_mode": "any",
+      "values": [
+        "body",
+        "privates",
+        "hands-feet"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_condition",
+    "handle": "no-underarms",
+    "fields": {
+      "name": "No underarms",
+      "answer_key": "dry",
+      "match_mode": "none",
+      "values": [
+        "underarms"
+      ]
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "trio-cream",
+    "fields": {
+      "name": "Trio cream",
+      "title": "Sweat Control Trio",
+      "page": "gid://shopify/Page/97416511675"
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "trio-red",
+    "fields": {
+      "name": "Trio red",
+      "title": "Sweat Control Trio",
+      "page": "gid://shopify/Page/97416544443"
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "body-cream",
+    "fields": {
+      "name": "Body cream",
+      "title": "Body Care Starter Kit",
+      "page": "gid://shopify/Page/97416478907"
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "body-red",
+    "fields": {
+      "name": "Body red",
+      "title": "Body Care Starter Kit",
+      "page": "gid://shopify/Page/97416446139"
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "signature-cream",
+    "fields": {
+      "name": "Signature cream",
+      "title": "Signature Starter Kit",
+      "page": "gid://shopify/Page/97416380603"
+    }
+  },
+  {
+    "type": "dd_quiz_result",
+    "handle": "signature-red",
+    "fields": {
+      "name": "Signature red",
+      "title": "Signature Starter Kit",
+      "page": "gid://shopify/Page/97416413371"
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "signature-cream",
+    "fields": {
+      "name": "Signature cream",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/has-underarms"
+        },
+        {
+          "$ref": "dd_quiz_condition/has-body-area"
+        },
+        {
+          "$ref": "dd_quiz_condition/cream"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/signature-cream"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "signature-red",
+    "fields": {
+      "name": "Signature red",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/has-underarms"
+        },
+        {
+          "$ref": "dd_quiz_condition/has-body-area"
+        },
+        {
+          "$ref": "dd_quiz_condition/red"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/signature-red"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "trio-cream",
+    "fields": {
+      "name": "Trio cream",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/underarms-only"
+        },
+        {
+          "$ref": "dd_quiz_condition/cream"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/trio-cream"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "trio-red",
+    "fields": {
+      "name": "Trio red",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/underarms-only"
+        },
+        {
+          "$ref": "dd_quiz_condition/red"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/trio-red"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "body-cream",
+    "fields": {
+      "name": "Body cream",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/no-underarms"
+        },
+        {
+          "$ref": "dd_quiz_condition/has-body-area"
+        },
+        {
+          "$ref": "dd_quiz_condition/cream"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/body-cream"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_rule",
+    "handle": "body-red",
+    "fields": {
+      "name": "Body red",
+      "conditions": [
+        {
+          "$ref": "dd_quiz_condition/no-underarms"
+        },
+        {
+          "$ref": "dd_quiz_condition/has-body-area"
+        },
+        {
+          "$ref": "dd_quiz_condition/red"
+        }
+      ],
+      "result": {
+        "$ref": "dd_quiz_result/body-red"
+      }
+    }
+  },
+  {
+    "type": "dd_quiz_flow",
+    "handle": "duradry-routine",
+    "fields": {
+      "name": "Duradry routine",
+      "version": "draft-2026-10-18",
+      "title": "Let's jump in when you are ready!",
+      "subtitle": "Takes 2min",
+      "questions": [
+        {
+          "$ref": "dd_quiz_question/gift"
+        },
+        {
+          "$ref": "dd_quiz_question/brand"
+        },
+        {
+          "$ref": "dd_quiz_question/dry"
+        },
+        {
+          "$ref": "dd_quiz_question/age"
+        },
+        {
+          "$ref": "dd_quiz_question/odor"
+        },
+        {
+          "$ref": "dd_quiz_question/gender"
+        },
+        {
+          "$ref": "dd_quiz_question/email"
+        },
+        {
+          "$ref": "dd_quiz_question/first-name"
+        }
+      ],
+      "rules": [
+        {
+          "$ref": "dd_quiz_rule/signature-cream"
+        },
+        {
+          "$ref": "dd_quiz_rule/signature-red"
+        },
+        {
+          "$ref": "dd_quiz_rule/trio-cream"
+        },
+        {
+          "$ref": "dd_quiz_rule/trio-red"
+        },
+        {
+          "$ref": "dd_quiz_rule/body-cream"
+        },
+        {
+          "$ref": "dd_quiz_rule/body-red"
+        }
+      ],
+      "start_label": "I AM READY",
+      "next_label": "CONTINUE",
+      "back_label": "\u2190 BACK",
+      "skip_label": "Skip",
+      "finish_label": "SEE MY RESULTS",
+      "restart_label": "Start again",
+      "result_heading": "Your recommended routine",
+      "result_button": "View results without subscribing",
+      "consent_label": "Email me Duradry news and offers. I can unsubscribe at any time.",
+      "privacy_note": "Your answers help us recommend a routine. Marketing emails are optional.",
+      "configuration_error": "This quiz is temporarily unavailable. Please try again later.",
+      "required_error": "Please complete this question.",
+      "submit_error": "We could not save your details. Please try again.",
+      "busy_label": "Saving\u2026",
+      "preview_notice": "Preview only. Nothing is submitted.",
+      "progress_label": "Question",
+      "email_label": "Email"
+    }
+  }
+]

@@ -1,0 +1,380 @@
+[
+  {
+    "name": "Quiz Condition",
+    "type": "dd_quiz_condition",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "answer_key",
+        "name": "Answer key",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "match_mode",
+        "name": "Match mode",
+        "type": "single_line_text_field",
+        "required": true,
+        "validations": [
+          {
+            "name": "choices",
+            "value": "[\"any\", \"all\", \"none\", \"exact\"]"
+          }
+        ]
+      },
+      {
+        "key": "values",
+        "name": "Values",
+        "type": "list.single_line_text_field",
+        "required": true
+      }
+    ]
+  },
+  {
+    "name": "Quiz Option",
+    "type": "dd_quiz_option",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "label",
+        "name": "Label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "value",
+        "name": "Value",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "image",
+        "name": "Image",
+        "type": "file_reference",
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "Quiz Question",
+    "type": "dd_quiz_question",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "answer_key",
+        "name": "Answer key",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "title",
+        "name": "Title",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "helper",
+        "name": "Helper",
+        "type": "multi_line_text_field",
+        "required": false
+      },
+      {
+        "key": "input_type",
+        "name": "Input type",
+        "type": "single_line_text_field",
+        "required": true,
+        "validations": [
+          {
+            "name": "choices",
+            "value": "[\"single\", \"multiple\", \"text\", \"email\"]"
+          }
+        ]
+      },
+      {
+        "key": "contact_role",
+        "name": "Contact role",
+        "type": "single_line_text_field",
+        "required": false,
+        "validations": [
+          {
+            "name": "choices",
+            "value": "[\"none\", \"email\", \"first_name\"]"
+          }
+        ]
+      },
+      {
+        "key": "placeholder",
+        "name": "Placeholder",
+        "type": "single_line_text_field",
+        "required": false
+      },
+      {
+        "key": "required",
+        "name": "Required",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "auto_advance",
+        "name": "Auto advance",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "key": "options",
+        "name": "Options",
+        "type": "list.metaobject_reference",
+        "required": false,
+        "reference_type": "dd_quiz_option"
+      },
+      {
+        "key": "show_when",
+        "name": "Show when",
+        "type": "list.metaobject_reference",
+        "required": false,
+        "reference_type": "dd_quiz_condition"
+      },
+      {
+        "key": "button_label",
+        "name": "Button label",
+        "type": "single_line_text_field",
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "Quiz Result",
+    "type": "dd_quiz_result",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "title",
+        "name": "Title",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "page",
+        "name": "Page",
+        "type": "page_reference",
+        "required": true
+      }
+    ]
+  },
+  {
+    "name": "Quiz Rule",
+    "type": "dd_quiz_rule",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "conditions",
+        "name": "Conditions",
+        "type": "list.metaobject_reference",
+        "required": true,
+        "reference_type": "dd_quiz_condition"
+      },
+      {
+        "key": "result",
+        "name": "Result",
+        "type": "metaobject_reference",
+        "required": true,
+        "reference_type": "dd_quiz_result"
+      }
+    ]
+  },
+  {
+    "name": "Quiz Flow",
+    "type": "dd_quiz_flow",
+    "displayNameKey": "name",
+    "access": {
+      "storefront": "PUBLIC_READ"
+    },
+    "fieldDefinitions": [
+      {
+        "key": "name",
+        "name": "Name",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "version",
+        "name": "Version",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "title",
+        "name": "Title",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "subtitle",
+        "name": "Subtitle",
+        "type": "multi_line_text_field",
+        "required": false
+      },
+      {
+        "key": "questions",
+        "name": "Questions",
+        "type": "list.metaobject_reference",
+        "required": true,
+        "reference_type": "dd_quiz_question"
+      },
+      {
+        "key": "rules",
+        "name": "Rules",
+        "type": "list.metaobject_reference",
+        "required": true,
+        "reference_type": "dd_quiz_rule"
+      },
+      {
+        "key": "start_label",
+        "name": "Start label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "next_label",
+        "name": "Next label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "back_label",
+        "name": "Back label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "skip_label",
+        "name": "Skip label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "finish_label",
+        "name": "Finish label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "restart_label",
+        "name": "Restart label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "result_heading",
+        "name": "Result heading",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "result_button",
+        "name": "Result button",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "consent_label",
+        "name": "Consent label",
+        "type": "multi_line_text_field",
+        "required": true
+      },
+      {
+        "key": "privacy_note",
+        "name": "Privacy note",
+        "type": "multi_line_text_field",
+        "required": true
+      },
+      {
+        "key": "configuration_error",
+        "name": "Configuration error",
+        "type": "multi_line_text_field",
+        "required": true
+      },
+      {
+        "key": "required_error",
+        "name": "Required error",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "submit_error",
+        "name": "Submit error",
+        "type": "multi_line_text_field",
+        "required": true
+      },
+      {
+        "key": "busy_label",
+        "name": "Busy label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "preview_notice",
+        "name": "Preview notice",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "progress_label",
+        "name": "Progress label",
+        "type": "single_line_text_field",
+        "required": true
+      },
+      {
+        "key": "email_label",
+        "name": "Email label",
+        "type": "single_line_text_field",
+        "required": true
+      }
+    ]
+  }
+]

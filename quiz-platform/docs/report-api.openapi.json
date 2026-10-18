@@ -1,0 +1,180 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Duradry Private Quiz Reports",
+    "version": "0.3.0",
+    "description": "Read-only aggregate reporting. No contact fields. Configure the server URL and bearer authentication in the connection secret store."
+  },
+  "servers": [
+    {
+      "url": "https://REPLACE-WITH-YOUR-DEPLOYMENT.vercel.app"
+    }
+  ],
+  "security": [
+    {
+      "reportBearer": []
+    }
+  ],
+  "paths": {
+    "/api/report": {
+      "get": {
+        "operationId": "getQuizReport",
+        "summary": "Read a date-filtered Duradry quiz report",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "First local calendar date, inclusive."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Last local calendar date, inclusive."
+          },
+          {
+            "name": "timezone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "America/New_York"
+            },
+            "description": "IANA timezone."
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "native",
+                "octane",
+                "klaviyo_octane"
+              ],
+              "default": "all"
+            },
+            "description": "Combined or a specific source."
+          },
+          {
+            "name": "quiz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "duradry-routine"
+            },
+            "description": "Stable native quiz identifier."
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional exact recommendation key."
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "Include preceding equal-length local-day window."
+          },
+          {
+            "name": "answers",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "completed",
+                "all"
+              ],
+              "default": "completed"
+            },
+            "description": "Answer-distribution population only. Session totals and step coverage remain unchanged."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate report with window, summary, daily trend, question distributions, result mix, funnel, coverage, notes and optional comparison.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "window",
+                    "summary",
+                    "questions",
+                    "coverage",
+                    "notes"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "type": "integer"
+                    },
+                    "window": {
+                      "type": "object"
+                    },
+                    "summary": {
+                      "type": "object"
+                    },
+                    "questions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "coverage": {
+                      "type": "object"
+                    },
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "422": {
+            "description": "Invalid filters or range too large"
+          },
+          "503": {
+            "description": "Reporting unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "reportBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

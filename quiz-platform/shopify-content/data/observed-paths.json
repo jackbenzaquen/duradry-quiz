@@ -1,0 +1,12 @@
+{
+  "audit_date": "2026-10-18",
+  "scope": "Six completed representative sessions covering all six discovered result pages, every categorical option at least once, and conflicting sweat/odor selections. Not an exhaustive verification of all legacy combinations.",
+  "paths": [
+    {"gift":"Clean Cream","dry":["Underarms"],"odor":["Underarms"],"age":"35-40","gender":"Prefer not to share","result":"trio-cream"},
+    {"gift":"Signature Red","dry":["Body"],"odor":["Body"],"age":"51 or older","gender":"Female","result":"body-red"},
+    {"gift":"Clean Cream","dry":["Underarms","Body"],"odor":["Underarms","Body"],"age":"23 or under","gender":"Male","result":"signature-cream"},
+    {"gift":"Signature Red","dry":["Underarms"],"odor":["Body"],"age":"24-29","gender":"Prefer not to share","result":"trio-red"},
+    {"gift":"Clean Cream","dry":["Privates","Hands/Feet"],"odor":["Underarms"],"age":"30-34","gender":"Female","brand":"Test Brand","result":"body-cream"},
+    {"gift":"Signature Red","dry":["Underarms","Privates","Hands/Feet"],"odor":["Feet"],"age":"41-50","gender":"Male","result":"signature-red"}
+  ]
+}

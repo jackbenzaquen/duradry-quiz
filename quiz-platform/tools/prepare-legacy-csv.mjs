@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';import path from 'node:path';import {parse} from 'csv-parse/sync';
+import {prepareLegacyCsv} from '../lib/legacy-csv.mjs';import {hash} from '../lib/security.mjs';
+const [file,historyDir,timezone]=process.argv.slice(2);if(!file||!historyDir||!timezone)throw Error('Usage: CSV_FILE HISTORY_DIRECTORY CSV_TIMEZONE');
+const raw=await fs.readFile(file),csv=parse(raw,{columns:true,bom:true,skip_empty_lines:true});
+const files=(await fs.readdir(path.join(historyDir,'raw'))).filter(n=>/^page-\d+\.json$/.test(n)).sort();
+const events=[];for(const name of files)events.push(...JSON.parse(await fs.readFile(path.join(historyDir,'raw',name))).data);
+const bundle=prepareLegacyCsv(csv,events,{timezone});
+await fs.writeFile(path.join(historyDir,'normalized-octane-responses.ndjson'),bundle.rows.map(r=>JSON.stringify(r)).join('\n')+'\n');
+await fs.writeFile(path.join(historyDir,'session-links.json'),JSON.stringify(bundle.links,null,2));
+await fs.writeFile(path.join(historyDir,'csv-reconciliation.json'),JSON.stringify({...bundle.stats,file:path.basename(file),sha256:hash(raw),links_sha256:hash(JSON.stringify(bundle.links)),limitations:['CSV covers approximately one year, not all time.','Twenty-three identical extra rows are retained because anonymous rows lack vendor session IDs.','Result-page presence is completion evidence; a calculation marker alone is not.','N/A consent remains unknown. Known synthetic audit rows are retained but excluded from reports.','Exact result URL matches suppress duplicate Klaviyo events in combined reports; source views retain originals.','CSV times have no zone marker; UTC is supported by 4,426 matched completion times, median 59 seconds later.']},null,2));
+console.log(JSON.stringify(bundle.stats));

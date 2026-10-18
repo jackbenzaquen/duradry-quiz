@@ -1,0 +1,413 @@
+{
+  "id": "duradry-routine",
+  "version": "draft-2026-10-18",
+  "title": "Let's jump in when you are ready!",
+  "subtitle": "Takes 2min",
+  "labels": {
+    "start_label": "I AM READY",
+    "next_label": "CONTINUE",
+    "back_label": "\u2190 BACK",
+    "skip_label": "Skip",
+    "finish_label": "SEE MY RESULTS",
+    "restart_label": "Start again",
+    "result_heading": "Your recommended routine",
+    "result_button": "View results without subscribing",
+    "consent_label": "Email me Duradry news and offers. I can unsubscribe at any time.",
+    "privacy_note": "Your answers help us recommend a routine. Marketing emails are optional.",
+    "configuration_error": "This quiz is temporarily unavailable. Please try again later.",
+    "required_error": "Please complete this question.",
+    "submit_error": "We could not save your details. Please try again.",
+    "busy_label": "Saving\u2026",
+    "preview_notice": "Preview only. Nothing is submitted.",
+    "progress_label": "Question",
+    "email_label": "Email"
+  },
+  "questions": [
+    {
+      "key": "gift",
+      "title": "Pick your FREE gift!",
+      "helper": "An elegant and durable neoprene toiletries bag for all your essentials. It's a $20 value for FREE!",
+      "kind": "single",
+      "role": "none",
+      "placeholder": "",
+      "required": true,
+      "auto": true,
+      "button": "",
+      "when": [],
+      "options": [
+        {
+          "label": "Clean Cream",
+          "value": "cream",
+          "image": ""
+        },
+        {
+          "label": "Signature Red",
+          "value": "red",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "key": "brand",
+      "title": "Which deodorant brand are you currently using?",
+      "helper": "",
+      "kind": "text",
+      "role": "none",
+      "placeholder": "Enter text",
+      "required": false,
+      "auto": false,
+      "button": "",
+      "when": [],
+      "options": []
+    },
+    {
+      "key": "dry",
+      "title": "Where do you need help staying dry?",
+      "helper": "Select all that apply",
+      "kind": "multiple",
+      "role": "none",
+      "placeholder": "",
+      "required": true,
+      "auto": false,
+      "button": "",
+      "when": [],
+      "options": [
+        {
+          "label": "Underarms",
+          "value": "underarms",
+          "image": ""
+        },
+        {
+          "label": "Body",
+          "value": "body",
+          "image": ""
+        },
+        {
+          "label": "Privates",
+          "value": "privates",
+          "image": ""
+        },
+        {
+          "label": "Hands/Feet",
+          "value": "hands-feet",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "key": "age",
+      "title": "How young are you?",
+      "helper": "",
+      "kind": "single",
+      "role": "none",
+      "placeholder": "",
+      "required": true,
+      "auto": true,
+      "button": "",
+      "when": [],
+      "options": [
+        {
+          "label": "23 or under",
+          "value": "23-under",
+          "image": ""
+        },
+        {
+          "label": "24-29",
+          "value": "24-29",
+          "image": ""
+        },
+        {
+          "label": "30-34",
+          "value": "30-34",
+          "image": ""
+        },
+        {
+          "label": "35-40",
+          "value": "35-40",
+          "image": ""
+        },
+        {
+          "label": "41-50",
+          "value": "41-50",
+          "image": ""
+        },
+        {
+          "label": "51 or older",
+          "value": "51-plus",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "key": "odor",
+      "title": "Where do you need help eliminating odors?",
+      "helper": "Select all that apply",
+      "kind": "multiple",
+      "role": "none",
+      "placeholder": "",
+      "required": true,
+      "auto": false,
+      "button": "",
+      "when": [],
+      "options": [
+        {
+          "label": "Underarms",
+          "value": "underarms",
+          "image": ""
+        },
+        {
+          "label": "Body",
+          "value": "body",
+          "image": ""
+        },
+        {
+          "label": "Privates",
+          "value": "privates",
+          "image": ""
+        },
+        {
+          "label": "Feet",
+          "value": "feet",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "key": "gender",
+      "title": "What's your gender?",
+      "helper": "",
+      "kind": "single",
+      "role": "none",
+      "placeholder": "",
+      "required": true,
+      "auto": true,
+      "button": "",
+      "when": [],
+      "options": [
+        {
+          "label": "Male",
+          "value": "male",
+          "image": ""
+        },
+        {
+          "label": "Female",
+          "value": "female",
+          "image": ""
+        },
+        {
+          "label": "Prefer not to share",
+          "value": "not-shared",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "key": "email",
+      "title": "What is your email?",
+      "helper": "Your email is used according to the privacy notice below.",
+      "kind": "email",
+      "role": "email",
+      "placeholder": "Enter email",
+      "required": true,
+      "auto": false,
+      "button": "",
+      "when": [],
+      "options": []
+    },
+    {
+      "key": "first-name",
+      "title": "What's your name?",
+      "helper": "",
+      "kind": "text",
+      "role": "first_name",
+      "placeholder": "First name",
+      "required": true,
+      "auto": false,
+      "button": "",
+      "when": [],
+      "options": []
+    }
+  ],
+  "rules": [
+    {
+      "key": "signature-cream",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "body",
+            "privates",
+            "hands-feet"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "cream"
+          ]
+        }
+      ],
+      "result": {
+        "key": "signature-cream",
+        "title": "Signature Starter Kit",
+        "url": "/pages/quiz-results-signature-starter-kit-cream"
+      }
+    },
+    {
+      "key": "signature-red",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "body",
+            "privates",
+            "hands-feet"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "red"
+          ]
+        }
+      ],
+      "result": {
+        "key": "signature-red",
+        "title": "Signature Starter Kit",
+        "url": "/pages/quiz-results-signature-starter-kit-red"
+      }
+    },
+    {
+      "key": "trio-cream",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "exact",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "cream"
+          ]
+        }
+      ],
+      "result": {
+        "key": "trio-cream",
+        "title": "Sweat Control Trio",
+        "url": "/pages/quiz-results-sweat-control-trio-cream"
+      }
+    },
+    {
+      "key": "trio-red",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "exact",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "red"
+          ]
+        }
+      ],
+      "result": {
+        "key": "trio-red",
+        "title": "Sweat Control Trio",
+        "url": "/pages/quiz-results-sweat-control-trio-red"
+      }
+    },
+    {
+      "key": "body-cream",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "none",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "body",
+            "privates",
+            "hands-feet"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "cream"
+          ]
+        }
+      ],
+      "result": {
+        "key": "body-cream",
+        "title": "Body Care Starter Kit",
+        "url": "/pages/quiz-results-body-care-starter-kit-cream"
+      }
+    },
+    {
+      "key": "body-red",
+      "conditions": [
+        {
+          "key": "dry",
+          "mode": "none",
+          "values": [
+            "underarms"
+          ]
+        },
+        {
+          "key": "dry",
+          "mode": "any",
+          "values": [
+            "body",
+            "privates",
+            "hands-feet"
+          ]
+        },
+        {
+          "key": "gift",
+          "mode": "exact",
+          "values": [
+            "red"
+          ]
+        }
+      ],
+      "result": {
+        "key": "body-red",
+        "title": "Body Care Starter Kit",
+        "url": "/pages/quiz-results-body-care-starter-kit-red"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "quiz_id": "duradry-routine",
+  "fields": {
+    "REPLACE_WITH_ACTUAL_GIFT_COMPONENT_KEY": "gift",
+    "REPLACE_WITH_ACTUAL_BRAND_COMPONENT_KEY": "brand",
+    "REPLACE_WITH_ACTUAL_SWEAT_COMPONENT_KEY": "dry",
+    "REPLACE_WITH_ACTUAL_AGE_COMPONENT_KEY": "age",
+    "REPLACE_WITH_ACTUAL_ODOR_COMPONENT_KEY": "odor",
+    "REPLACE_WITH_ACTUAL_GENDER_COMPONENT_KEY": "gender"
+  },
+  "values": {},
+  "results": {}
+}
