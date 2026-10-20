@@ -1,5 +1,6 @@
 import {DateTime} from 'luxon';
 import {range} from './dates.mjs';
+import {conversionFunnel,revenueSeries} from './conversion.mjs';
 const labels={gift:'Gift preference',brand:'Current deodorant brand',dry:'Sweat areas',age:'Age',odor:'Odor areas',gender:'Gender'};
 const cleanText=value=>{const s=String(value).trim().slice(0,120);return /@|\d[\d\s()+.-]{7,}/.test(s)?'[redacted free text]':s;};
 const values=value=>Array.isArray(value)?value:value===null||value===undefined||value===''?[]:[value];
@@ -7,7 +8,7 @@ const percentage=(n,d)=>d?n/d*100:null;
 const hasStart=s=>!!(s.started_at||s.start_observed);
 const hasCompletion=s=>!!(s.completed_at||s.completion_observed);
 const stepLabels={welcome:'Welcome interaction',gift:'Gift choice',brand:'Brand entered (optional)',dry:'Sweat areas',age:'Age',odor:'Odor areas',gender:'Gender',email:'Email entered',first_name:'First name entered',calculation:'Calculation continued',result:'Result captured'};
-export function aggregate(sessions,window,{source='all',answerPopulation='completed',orders=[],now=new Date().toISOString()}={}){
+export function aggregate(sessions,window,{source='all',answerPopulation='completed',orders=[],questions:questionDefinitions=[],ordersAvailable=false,now=new Date().toISOString()}={}){
   const rows=sessions.filter(s=>!s.is_test&&(source!=='all'||!s.duplicate_of)&&new Date(s.occurred_at)>=new Date(window.start)&&new Date(s.occurred_at)<new Date(window.end)&&(source==='all'||s.source===source));
   const completed=rows.filter(hasCompletion),started=rows.filter(hasStart),trackedCompleted=started.filter(hasCompletion);
   const views=rows.filter(s=>(s.events||[]).some(e=>e.kind==='viewed')).length;
@@ -44,12 +45,15 @@ export function aggregate(sessions,window,{source='all',answerPopulation='comple
   const rowIds=new Set(rows.map(s=>s.id));const associated=orders.filter(o=>rowIds.has(o.session_id));const revenueByCurrency=Object.create(null);for(const order of associated){revenueByCurrency[order.currency]=(revenueByCurrency[order.currency]||0)+Number(order.amount);}
   duration.sort((a,b)=>a-b);const median=duration.length?(duration[Math.floor((duration.length-1)/2)]+duration[Math.ceil((duration.length-1)/2)])/2:null;
   const identified=completed.filter(s=>s.subject_key);const people=new Set(identified.map(s=>s.subject_key)).size;
-  return {schema_version:2,generated_at:now,window,source,answer_population:answerPopulation,summary:{sessions:rows.length,views:views||null,starts:started.length||null,completions:completed.length,observed_completions:trackedCompleted.length,observed_completion_rate:percentage(trackedCompleted.length,started.length),identified_people:people||null,repeat_identified_completions:identified.length-people,consented_completions:completed.filter(s=>s.email_consent===true).length,consent_rate:percentage(completed.filter(s=>s.email_consent===true).length,coverage.with_consent),median_completion_seconds:median,linked_orders:associated.length||null,linked_revenue:revenueByCurrency},daily:Object.values(days),results:Object.entries(results).map(([label,count])=>({label,count,share:percentage(count,completed.length)})).sort((a,b)=>b.count-a.count),questions:reportQuestions,response_coverage:responseCoverage,funnel:Object.values(funnel).map(f=>({...f,average_seconds:f.timed_responses?f.total_ms/f.timed_responses/1000:null,not_continued:f.viewed-f.answered-f.skipped,not_continued_rate:percentage(f.viewed-f.answered-f.skipped,f.viewed)})),sources,coverage,notes:[
+  return {schema_version:3,conversion_funnel:conversionFunnel(rows,orders,{questions:questionDefinitions,now,ordersAvailable}),generated_at:now,window,source,answer_population:answerPopulation,summary:{sessions:rows.length,views:views||null,starts:started.length||null,completions:completed.length,observed_completions:trackedCompleted.length,observed_completion_rate:percentage(trackedCompleted.length,started.length),identified_people:people||null,repeat_identified_completions:identified.length-people,consented_completions:completed.filter(s=>s.email_consent===true).length,consent_rate:percentage(completed.filter(s=>s.email_consent===true).length,coverage.with_consent),median_completion_seconds:median,linked_orders:associated.length||null,linked_revenue:revenueByCurrency},daily:Object.values(days),results:Object.entries(results).map(([label,count])=>({label,count,share:percentage(count,completed.length)})).sort((a,b)=>b.count-a.count),questions:reportQuestions,response_coverage:responseCoverage,funnel:Object.values(funnel).map(f=>({...f,average_seconds:f.timed_responses?f.total_ms/f.timed_responses/1000:null,not_continued:f.viewed-f.answered-f.skipped,not_continued_rate:percentage(f.viewed-f.answered-f.skipped,f.viewed)})),sources,coverage,notes:[
     'Dates use recorded session time for Octane CSV, first event for native sessions, and completion time for Klaviyo-only history. End date includes the full local day.',
     'Observed completion rate uses native starts or CSV welcome interactions. It is a session-based measure, not Octane unique-person conversion; Klaviyo-only history is excluded.',
     'Legacy answer labels remain separate when their mapping to current wording is unverified.',
     'Identified people use available stable identifiers, not a guaranteed cross-device identity count.',
-    'Linked revenue requires a recorded session-to-order link; it is not incremental revenue. Refund-adjusted net revenue is not implemented.',
+    'Attribution uses an exact dd_quiz_session order/cart or line-item attribute and a 30-day window from the observed native start. Each order is counted once and each converted session is counted once. No email-based or product-based attribution is inferred.',
+    'The conversion funnel uses native sessions with observed starts; historical and completion-only records cannot establish a start-to-order rate. Recent cohorts have open conversion windows; not-yet-converted sessions are not final abandonment.',
+    'Question drop-off = viewed sessions with neither an answer/skip nor a submission, divided by question viewers. Optional skips count as continuation. Conditional steps can have fewer views without representing abandonment. Submission drop-off means no linked order yet.',
+    'Revenue is original paid order value after discounts, including shipping and tax, before refunds; it is attributed, not incremental revenue. Revenue dates are order creation dates, while funnel dates select quiz start cohorts.',
     'CSV timestamp timezone is inferred as UTC from 4,426 exact result-link matches. Exact start and completion times are not fabricated.',
     'Response coverage counts recorded answers, not question views or proven abandonment. Blank optional answers do not mean drop-off.',
     'Combined history suppresses exact linked Klaviyo duplicates; originals remain available under their own source.',
@@ -69,12 +73,24 @@ export async function fetchReport(db,input={}){
     AND (s.source<>'klaviyo_octane' OR $4<>'all' OR NOT EXISTS(SELECT 1 FROM quiz_source_coverage c WHERE c.quiz_id=s.quiz_id AND c.source='octane' AND s.occurred_at>=c.from_at AND s.occurred_at<c.to_at))
     ORDER BY s.occurred_at LIMIT 100001`,[fromPrevious,window.end,quiz,source,result]);
   if(rows.length>100000)throw Error('More than 100,000 sessions matched; narrow the date range. No partial report was returned.');
-  const orderRows=await db.query(`SELECT o.id,o.session_id,o.paid_at,o.amount,o.currency FROM quiz_orders o JOIN quiz_sessions s ON s.id=o.session_id WHERE s.occurred_at >=$1 AND s.occurred_at<$2 AND s.quiz_id=$3`,[fromPrevious,window.end,quiz]);
-  const current=aggregate(rows,window,{source,answerPopulation,orders:orderRows});
+  const orderRows=await db.query(`SELECT o.id,o.session_id,o.paid_at,o.amount,o.currency,s.source FROM quiz_orders o JOIN quiz_sessions s ON s.id=o.session_id
+    WHERE s.quiz_id=$3 AND NOT s.is_test AND (($4='all' AND NOT EXISTS(SELECT 1 FROM quiz_session_links l WHERE l.duplicate_id=s.id)) OR s.source=$4)
+    AND ($5='' OR s.result_key=$5) AND ((s.occurred_at >=$1 AND s.occurred_at<$2) OR (o.paid_at >=$1 AND o.paid_at<$2))`,[fromPrevious,window.end,quiz,source,result]);
+  const configs=await db.query('SELECT content FROM quiz_configs WHERE quiz_id=$1 ORDER BY created_at DESC',[quiz]);
+  const questions=[];const questionKeys=new Set();for(const c of configs)for(const q of c.content.questions||[])if(!questionKeys.has(q.key)){questions.push(q);questionKeys.add(q.key);}
+  const [orderCheck]=await db.query("SELECT status,details,checked_at FROM quiz_checks WHERE key='orders'");
+  const ordersAvailable=orderCheck?.status==='ok'&&orderCheck.details?.complete===true&&Date.now()-Date.parse(orderCheck.checked_at)<15*60000;
+  const [orderState]=await db.query("SELECT payload FROM quiz_sync_state WHERE key='orders'");
+  const current=aggregate(rows,window,{source,answerPopulation,orders:orderRows,questions,ordersAvailable});
+  current.revenue=revenueSeries(orderRows,window,{source,available:ordersAvailable&&['native','all'].includes(source)});
+  current.revenue.coverage_from=orderState?.payload?.coverage_from||null;
+  current.revenue.synced_through=orderState?.payload?.to||null;
+  for(const [key,value] of [['coverage_start_date',current.revenue.coverage_from],['coverage_end_date',current.revenue.synced_through]])current.revenue[key]=value?DateTime.fromISO(value).setZone(window.timezone).toISODate():null;
+  current.revenue.scope='Exact native quiz attribution only; historical Octane revenue is available only in the saved reference snapshot.';
   const [sync]=await db.query("SELECT count(*) FILTER(WHERE state='pending') AS pending,count(*) FILTER(WHERE state='failed') AS failed,count(*) FILTER(WHERE state='sent') AS sent FROM quiz_outbox");
   const snapshots=await db.query('SELECT payload FROM quiz_reference_snapshots WHERE quiz_id=$1 ORDER BY captured_at DESC LIMIT 1',[quiz]);
   current.reference_snapshot=snapshots[0]?.payload||null;
   current.sync=sync;current.filters={quiz,result,source,answers:answerPopulation};
-  if(input.compare!=='false'){current.previous=aggregate(rows,range({...window,...window.previous}),{source,answerPopulation,orders:orderRows});current.changes={completions_pct:current.previous.summary.completions?(current.summary.completions/current.previous.summary.completions-1)*100:null,completion_rate_pp:current.summary.observed_completion_rate===null||current.previous.summary.observed_completion_rate===null?null:current.summary.observed_completion_rate-current.previous.summary.observed_completion_rate};}
+  if(input.compare!=='false'){current.previous=aggregate(rows,range({...window,...window.previous}),{source,answerPopulation,orders:orderRows,questions,ordersAvailable});current.changes={completions_pct:current.previous.summary.completions?(current.summary.completions/current.previous.summary.completions-1)*100:null,completion_rate_pp:current.summary.observed_completion_rate===null||current.previous.summary.observed_completion_rate===null?null:current.summary.observed_completion_rate-current.previous.summary.observed_completion_rate};}
   return current;
 }

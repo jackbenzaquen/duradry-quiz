@@ -56,3 +56,15 @@ CREATE TABLE IF NOT EXISTS quiz_reference_snapshots (
  id text PRIMARY KEY,quiz_id text NOT NULL,captured_at timestamptz NOT NULL,payload jsonb NOT NULL
 );
 ALTER TABLE quiz_events ADD COLUMN IF NOT EXISTS elapsed_ms integer;
+ALTER TABLE quiz_outbox ADD COLUMN IF NOT EXISTS receipt_verified_at timestamptz;
+ALTER TABLE quiz_outbox ADD COLUMN IF NOT EXISTS receipt_event_id text;
+ALTER TABLE quiz_orders ADD COLUMN IF NOT EXISTS attribution_method text NOT NULL DEFAULT 'legacy_link';
+ALTER TABLE quiz_orders ADD COLUMN IF NOT EXISTS ingest_source text NOT NULL DEFAULT 'manual';
+ALTER TABLE quiz_orders ADD COLUMN IF NOT EXISTS source_event_id text;
+CREATE INDEX IF NOT EXISTS quiz_orders_date ON quiz_orders(paid_at);
+CREATE TABLE IF NOT EXISTS quiz_checks (
+  key text PRIMARY KEY,status text NOT NULL,details jsonb NOT NULL DEFAULT '{}',checked_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS quiz_sync_state (
+  key text PRIMARY KEY,payload jsonb NOT NULL DEFAULT '{}',updated_at timestamptz NOT NULL DEFAULT now()
+);

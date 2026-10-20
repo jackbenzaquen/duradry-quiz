@@ -2,12 +2,12 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Duradry Private Quiz Reports",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Read-only aggregate reporting. No contact fields. Configure the server URL and bearer authentication in the connection secret store."
   },
   "servers": [
     {
-      "url": "https://REPLACE-WITH-YOUR-DEPLOYMENT.vercel.app"
+      "url": "https://duradry-quiz-quiz-platform.vercel.app"
     }
   ],
   "security": [
@@ -149,6 +149,18 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "conversion_funnel": {
+                      "type": "object",
+                      "description": "Native observed-start cohort. Unique converted sessions and per-step reach/drop-off ending Quiz submitted and Order placed; 30-day exact-session attribution."
+                    },
+                    "revenue": {
+                      "type": "object",
+                      "description": "Currency-separated original paid order value by order date, including coverage boundaries and import freshness."
+                    },
+                    "health": {
+                      "type": "object",
+                      "description": "Current database, worker, delivery queue, verified Klaviyo receipt, order import and live page health."
                     }
                   },
                   "additionalProperties": true
@@ -164,6 +176,31 @@
           },
           "503": {
             "description": "Reporting unavailable"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "getQuizSystemHealth",
+        "summary": "Read current quiz health without initiating checks",
+        "responses": {
+          "200": {
+            "description": "Health status and individual checks; status may be ok, warning or error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "503": {
+            "description": "Health unavailable"
           }
         }
       }
