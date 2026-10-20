@@ -7,24 +7,38 @@ const money=(n,c)=>new Intl.NumberFormat('en-US',{style:'currency',currency:c,ma
 export function renderFunnel(f){
   const container=$('conversion-funnel');if(!container)return;
   container.replaceChildren();
+  $('funnel-note').textContent='';
   $('conversion-rate').textContent=pct(f?.start_to_order_rate);
   $('conversion-detail').textContent=f?`${fmt(f.converted_sessions)} converted sessions / ${fmt(f.starts)} starts · ${f.attribution_days}-day attribution`:'No native tracking available.';
   if(!f?.starts){container.append(el('p','No native quiz starts were observed in these dates. Historical answers and submissions without analytics consent cannot establish step drop-off.','empty'));return;}
-  for(const s of f.steps){
-    const row=el('div',null,'funnel-row'),label=el('div',s.label,'funnel-label');
-    if(s.optional)label.append(el('small','Optional · skips continue'));
-    if(s.conditional)label.append(el('small','Conditional step'));
-    const track=el('div',null,'funnel-track');track.setAttribute('role','img');
-    track.setAttribute('aria-label',`${s.label}: ${fmt(s.reached)} reached, ${pct(s.share_of_starts)} of starts, ${pct(s.drop_off_rate)} drop-off`);
-    const reached=s.reached??0,loss=s.drop_off??0;
-    const keep=el('span',null,'funnel-continued'),drop=el('span',null,'funnel-dropped');
-    keep.style.width=Math.max(0,reached-loss)/f.starts*100+'%';drop.style.width=loss/f.starts*100+'%';
-    track.append(keep,drop);
-    const metrics=el('div',null,'funnel-metrics');
-    metrics.append(el('strong',`${fmt(s.reached)} · ${pct(s.share_of_starts)} of starts`),el('small',s.kind==='order'?'Converted sessions':s.drop_off_rate==null?'Drop-off unavailable':`${pct(s.drop_off_rate)} drop-off · ${fmt(s.drop_off)} sessions`));
-    row.append(label,track,metrics);container.append(row);
-  }
-  $('funnel-note').textContent=`Native sessions only. Bars show share of starts; coral shows sessions that have not continued from that step. Drop-off % uses that step’s viewers. Submission drop-off means no order yet. ${fmt(f.open_conversion_windows)} sessions still have an open 30-day purchase window. ${fmt(f.completion_only_excluded)} submissions without an observed start excluded.`;
+  const wrap=label=>{const lines=[''];for(const word of label.split(/\s+/)){const last=lines.length-1;if(lines[last]&&lines[last].length+word.length+1>16)lines.push(word);else lines[last]+=(lines[last]?' ':'')+word;}return lines;};
+  const labels=f.steps.map(s=>wrap(s.label)),labelLines=Math.max(1,...labels.map(lines=>lines.length));
+  const NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');
+  const left=76,right=18,top=40,plotH=260,W=Math.max(680,left+right+f.steps.length*100),base=top+plotH,H=base+labelLines*16+104;
+  const make=(tag,attrs,text,parent=svg)=>{const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text!=null)n.textContent=text;parent.append(n);return n;};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('role','group');svg.setAttribute('aria-label','Quiz steps on the X axis; percentage of quiz starters on the Y axis, from 0 to 100 percent.');svg.style.minWidth=W+'px';
+  for(let value=0;value<=100;value+=20){const y=base-value/100*plotH;make('line',{x1:left,x2:W-right,y1:y,y2:y,class:'funnel-gridline'});make('text',{x:left-12,y:y+4,'text-anchor':'end',class:'funnel-tick'},value+'%');}
+  make('text',{x:18,y:top+plotH/2,transform:`rotate(-90 18 ${top+plotH/2})`,'text-anchor':'middle',class:'funnel-axis'},'% of quiz starters');
+  const slot=(W-left-right)/f.steps.length,barW=Math.min(56,slot*.6);
+  f.steps.forEach((s,i)=>{
+    const x=left+slot*(i+.5),reached=Math.max(0,Math.min(f.starts,s.reached??0)),loss=Math.max(0,Math.min(reached,s.drop_off??0));
+    const totalH=reached/f.starts*plotH,lossH=loss/f.starts*plotH,keepH=totalH-lossH;
+    const detail=`${s.label}: ${fmt(s.reached)} reached, ${pct(s.share_of_starts)} of quiz starters. `+(s.kind==='order'?'Converted sessions.':s.drop_off_rate==null?'Drop-off unavailable.':`${pct(s.drop_off_rate)} drop-off (${fmt(s.drop_off)} sessions).`)+(s.optional?' Optional; skips continue.':'')+(s.conditional?' Conditional step.':'');
+    const group=make('g',{class:'funnel-step',tabindex:0,role:'img','aria-label':detail});make('title',{},detail,group);
+    // The total height is reach; its coral segment is loss at that step.
+    make('rect',{x:x-barW/2,y:top,width:barW,height:plotH,class:'funnel-background'},null,group);
+    make('rect',{x:x-barW/2,y:base-keepH,width:barW,height:keepH,class:'funnel-continued'},null,group);
+    make('rect',{x:x-barW/2,y:base-totalH,width:barW,height:lossH,class:'funnel-dropped'},null,group);
+    make('text',{x,y:base-totalH-10,'text-anchor':'middle',class:'funnel-value'},pct(s.share_of_starts),group);
+    const label=make('text',{x,y:base+24,'text-anchor':'middle',class:'funnel-label'},null,group);
+    labels[i].forEach((line,j)=>make('tspan',{x,dy:j?16:0},line,label));
+    const annotation=s.optional?'Optional · skips count':s.conditional?'Conditional step':'';
+    if(annotation)make('text',{x,y:base+labelLines*16+28,'text-anchor':'middle',class:'funnel-annotation'},annotation,group);
+    make('text',{x,y:base+labelLines*16+46,'text-anchor':'middle',class:'funnel-drop-label'},s.kind==='order'?'Converted':s.drop_off_rate==null?'Drop-off unavailable':pct(s.drop_off_rate)+' drop-off',group);
+  });
+  make('text',{x:left+(W-left-right)/2,y:H-10,'text-anchor':'middle',class:'funnel-axis'},'Quiz step');
+  container.append(svg);
+  $('funnel-note').textContent=`Native sessions only. Each bar shows the percentage of quiz starters who reached that step; coral shows those who have not continued. Drop-off % uses that step’s viewers. Submission drop-off means no order yet. ${fmt(f.open_conversion_windows)} sessions still have an open 30-day purchase window. ${fmt(f.completion_only_excluded)} submissions without an observed start excluded.`;
 }
 
 function lineChart(container,data,currency){
