@@ -6,6 +6,36 @@ const completed=s=>!!(s.completed_at||s.completion_observed);
 const inRange=(date,window)=>Date.parse(date)>=Date.parse(window.start)&&Date.parse(date)<Date.parse(window.end);
 const fallbackQuestions=[['gift','Gift choice'],['brand','Current brand (optional)'],['dry','Sweat areas'],['age','Age'],['odor','Odor areas'],['gender','Gender'],['email','Email'],['first-name','First name']];
 
+// CSV responses establish answered steps and submissions, not question views or purchases.
+// Keep this historical cohort distinct from native view telemetry and order coverage.
+export function octaneFunnel(rows){
+  const history=rows.filter(s=>s.source==='octane'&&!s.is_test);
+  const cohort=history.filter(s=>s.started_at||s.start_observed),starts=cohort.length;
+  const submitted=cohort.filter(completed).length;
+  const steps=fallbackQuestions.map(([key,label])=>{
+    const flag=key==='first-name'?'first_name':key;
+    const reached=cohort.filter(s=>s.response_flags?.[flag]).length;
+    return {key,label,kind:'question',reached,share_of_starts:percent(reached,starts),continued:null,drop_off:null,drop_off_rate:null,optional:key==='brand',measurement:'recorded_response'};
+  });
+  return {kind:'octane_csv',basis:'Octane CSV responses among sessions with a recorded welcome interaction in the selected dates. Question bars count recorded answers, not views.',starts,submitted,converted_sessions:null,start_to_order_rate:null,submission_to_order_rate:null,attribution_days:null,completion_only_excluded:history.filter(s=>completed(s)&&!s.started_at&&!s.start_observed).length,reported_submissions:history.filter(completed).length,orders_unavailable_reason:'The Octane response CSV contains recommendations and result pages, but no order IDs or purchase records.',steps:[
+    {key:'started',label:'Quiz started',kind:'start',reached:starts,share_of_starts:percent(starts,starts),continued:null,drop_off:null,drop_off_rate:null},
+    ...steps,
+    {key:'submitted',label:'Quiz submitted',kind:'submission',reached:submitted,share_of_starts:percent(submitted,starts),continued:null,drop_off:null,drop_off_rate:null,measurement:'result_page_or_completion'},
+    {key:'ordered',label:'Order placed',kind:'order',reached:null,share_of_starts:null,continued:null,drop_off:null,drop_off_rate:null,unavailable_reason:'Not included in the Octane response CSV'}
+  ]};
+}
+
+export function reportFunnels(rows,orders,options={}){
+  const native={...conversionFunnel(rows,orders,options),kind:'native'};
+  const octane=octaneFunnel(rows),source=options.source||'all';
+  const views=[];
+  if(source==='octane'||source==='all'&&rows.some(s=>s.source==='octane'))views.push({key:'octane',label:'Octane history · recorded responses',funnel:octane});
+  if(source==='native'||source==='all'&&(native.starts||native.completion_only_excluded))views.push({key:'native',label:'Native quiz · tracked views',funnel:native});
+  const preferred=views.reduce((best,v)=>!best||v.funnel.starts>best.funnel.starts?v:best,null);
+  const completionOnly=rows.filter(s=>completed(s)&&!s.started_at&&!s.start_observed).length;
+  return {conversion_funnel:preferred?.funnel||{...native,kind:source==='klaviyo_octane'?'klaviyo_octane':'native',completion_only_excluded:completionOnly,reported_submissions:completionOnly},conversion_funnels:views};
+}
+
 // Count sessions, not events or orders. Repeated answers/back clicks never inflate reach.
 export function conversionFunnel(rows,orders,{questions=[],now=new Date().toISOString(),ordersAvailable=false}={}){
   const cohort=rows.filter(s=>s.source==='native'&&s.started_at&&!s.is_test);

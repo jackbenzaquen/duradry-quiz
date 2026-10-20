@@ -7,7 +7,8 @@ import {orderFromEvent,ingestOrderEvent,confirmQuizEvent} from '../lib/orders.mj
 import {readEventWindow} from '../lib/klaviyo-read.mjs';
 import {healthSnapshot,runHealthChecks} from '../lib/health.mjs';
 import {recordCheck,state} from '../lib/monitor-store.mjs';
-import {fetchReport} from '../lib/report.mjs';
+import {fetchReport,aggregate} from '../lib/report.mjs';
+import {prepareLegacyCsv,csvFields} from '../lib/legacy-csv.mjs';
 import {range} from '../lib/dates.mjs';
 const uuid='11111111-1111-4111-8111-111111111111',id='native:'+uuid;
 const start='2026-10-19T12:00:00Z',completion='2026-10-19T12:01:00Z',now='2026-10-21T00:00:00Z';
@@ -29,6 +30,28 @@ test('funnel uses native starts, optional skips continue, repeated orders count 
 });
 test('future orders, orders before submission and outside 30 days cannot convert a cohort',()=>{
   for(const paid_at of ['2026-10-18T12:00:00Z','2026-10-22T12:00:00Z','2026-12-01T12:00:00Z'])assert.equal(conversionFunnel([session],[{...order,paid_at}],{now,ordersAvailable:true}).converted_sessions,0);
+});
+test('Octane result pages count as submissions without an exact completion time; recommendations are not orders',()=>{
+  const raw={Timestamp:'2026-10-19 12:00:00','What is your email? - Marketing Consent':'N/A',[csvFields.welcome]:'Pressed continue button',[csvFields.dry]:'Underarms',[csvFields.result]:'Sweat Control Trio Cream'};
+  const done=prepareLegacyCsv([raw],[],{timezone:'UTC'}).rows[0];
+  assert.equal(done.completed_at,null);
+  const rows=[done,{...done,id:'unfinished',completion_observed:false,response_flags:{welcome:true,gift:true,calculation:true}},{...done,id:'unstarted',start_observed:false,completion_observed:false,response_flags:{}},{...session}];
+  const r=aggregate(rows,range({from:'2026-10-19',to:'2026-10-19'}),{orders:[order],ordersAvailable:true,now});
+  assert.equal(r.conversion_funnel.kind,'octane_csv');assert.equal(r.conversion_funnel.starts,2);assert.equal(r.conversion_funnel.submitted,1);
+  assert.equal(r.conversion_funnel.steps.at(-2).share_of_starts,50);
+  assert.equal(r.conversion_funnel.steps.at(-1).reached,null);assert.equal(r.conversion_funnel.start_to_order_rate,null);
+  assert.equal(r.conversion_funnel.steps.find(s=>s.key==='brand').drop_off_rate,null);
+  assert.equal(r.conversion_funnels.find(v=>v.key==='native').funnel.converted_sessions,1);
+});
+test('historical funnel honors dates, source selection, exact duplicate exclusions, and completion-only records',()=>{
+  const csv={id:'csv',source:'octane',occurred_at:start,start_observed:true,completion_observed:true,response_flags:{welcome:true,result:true}};
+  const completionOnly={id:'legacy',source:'klaviyo_octane',occurred_at:start,completed_at:completion};
+  const rows=[csv,{...csv,id:'outside',occurred_at:'2026-10-18T12:00:00Z'},{...csv,id:'test',is_test:true},{...completionOnly,duplicate_of:'csv'},session];
+  const w=range({from:'2026-10-19',to:'2026-10-19'});
+  const r=aggregate(rows,w,{source:'octane',ordersAvailable:true});assert.equal(r.conversion_funnel.starts,1);assert.equal(r.conversion_funnel.submitted,1);assert.equal(r.conversion_funnel.converted_sessions,null);
+  assert.equal(aggregate(rows,w,{source:'all'}).summary.completions,2);
+  assert.equal(aggregate(rows,w,{source:'native'}).conversion_funnel.kind,'native');
+  const old=aggregate([completionOnly],w,{source:'klaviyo_octane'});assert.equal(old.conversion_funnel.starts,0);assert.equal(old.conversion_funnel.reported_submissions,1);assert.equal(old.conversion_funnel.start_to_order_rate,null);
 });
 test('revenue uses order dates, fills real zero days, preserves currency and DST boundaries',()=>{
   const w=range({from:'2026-11-01',to:'2026-11-02'});

@@ -18,10 +18,12 @@ Production builds run additive schema migrations, a health pass and a report que
 
 ## Chart definitions
 
-- The funnel selects native sessions that began in the chosen date range, excludes missing-start/legacy/test sessions, and ends with **Quiz submitted** and **Order placed**. Purchase windows remain open for recent starts; conversion can increase after the selected end date.
-- Per-question drop-off uses the viewers of that question as denominator. An answer, an optional skip, or a later submission counts as continuation. Back clicks/repeated events do not create extra visitors. Conditional questions can legitimately have lower reach.
+- The funnel ends with **Quiz submitted** and **Order placed** and separates **Octane history · recorded responses** from **Native quiz · tracked views**. In Combined history, a selector appears when both sources are present; the initial view uses the source with more observed starts. The two measurement types are not added together.
+- Octane history uses CSV welcome interactions as observed starts. A result page or exactly matched completion counts as **Quiz submitted**, even when an exact completion timestamp is unavailable. Question bars show recorded answers as a percentage of these starts. Blank optional answers do not prove abandonment, so historical per-step drop-off is unavailable. Recommended product IDs and titles do not establish a purchase: **Order placed** remains unavailable because the CSV has no order records.
+- The fixed Octane reference snapshot shows vendor-reported starts, submissions and orders separately with its own reporting period. Date filters do not change these totals, and orders must not be presented as unique purchasers or assigned to individual CSV sessions. Completion-only Klaviyo records remain in completed totals but cannot establish a start-to-order denominator.
+- The native view selects sessions that began in the chosen date range and excludes missing-start/test sessions. Purchase windows remain open for recent starts; conversion can increase after the selected end date. Per-question drop-off uses the viewers of that question as denominator. An answer, an optional skip, or a later submission counts as continuation. Back clicks/repeated events do not create extra visitors. Conditional questions can legitimately have lower reach.
 - The revenue line uses **order creation date** in the selected timezone, even if the quiz started before the selected period. It displays currencies separately. Days before import coverage or after the last covered day are gaps, not fabricated zero revenue.
-- `/api/report` schema version 3 adds `conversion_funnel`, `revenue`, and `health` while preserving existing fields.
+- `/api/report` schema version 4 adds `conversion_funnels` with source-specific views. `conversion_funnel` is the preferred view and includes `kind` (`native`, `octane_csv`, or completion-only `klaviyo_octane`). It preserves the existing `revenue`, `health`, and aggregate fields. No database migration is required for this correction.
 
 ## Routine checks
 

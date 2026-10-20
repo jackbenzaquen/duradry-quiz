@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Duradry Private Quiz Reports",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Read-only aggregate reporting. No contact fields. Configure the server URL and bearer authentication in the connection secret store."
   },
   "servers": [
@@ -152,7 +152,20 @@
                     },
                     "conversion_funnel": {
                       "type": "object",
-                      "description": "Native observed-start cohort. Unique converted sessions and per-step reach/drop-off ending Quiz submitted and Order placed; 30-day exact-session attribution."
+                      "description": "Preferred source-specific funnel, ending Quiz submitted and Order placed. Kind identifies native tracked views, octane_csv recorded responses, or completion-only klaviyo_octane. Historical submissions use result-page/completion evidence; historical order counts and per-step drop-off are null, not zero. Native conversion uses 30-day exact-session attribution."
+                    },
+                    "conversion_funnels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["key", "label", "funnel"],
+                        "properties": {
+                          "key": {"type": "string", "enum": ["octane", "native"]},
+                          "label": {"type": "string"},
+                          "funnel": {"type": "object"}
+                        }
+                      },
+                      "description": "Available source-specific funnel views in the selected dates. Octane CSV answers and native question views must not be combined into one per-step denominator."
                     },
                     "revenue": {
                       "type": "object",
