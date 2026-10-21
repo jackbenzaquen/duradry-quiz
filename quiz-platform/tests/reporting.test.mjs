@@ -97,3 +97,14 @@ test('health reports scope failures and missing heartbeat instead of green statu
     assert.equal(failure.checks.find(c=>c.key==='receipt_scan').status,'error');assert.match(failure.checks.find(c=>c.key==='receipt_scan').detail,/metrics:read/);
   }finally{await pg.close();}
 });
+
+test('all-history API finds the filtered first record and suppresses pre-history comparisons',async()=>{
+  const {pg,db}=await database();try{
+    await db.query("INSERT INTO quiz_sessions(id,source,source_id,quiz_id,version,occurred_at,completed_at,is_test) VALUES('old-test','native','old-test','duradry-routine','v1','2020-01-01','2020-01-01',true)");
+    const r=await fetchReport(db,{period:'all',source:'native',compare:'true',from:'2024-08-15',to:'2026-10-20'});
+    assert.equal(r.window.from,'2026-10-19');assert.equal(r.comparison.status,'off');assert.equal(r.comparison.reason,'all_history');assert.equal(r.previous,undefined);assert.equal(r.availability.first_record_date,'2026-10-19');
+    assert.equal(r.reconciliation.completed_with_start,1);assert.equal(r.reconciliation.unidentified_completions,1);
+    const compared=await fetchReport(db,{from:'2026-10-19',to:'2026-10-20',source:'native',compare:'true'});
+    assert.equal(compared.comparison.reason,'no_prior_records');assert.equal(compared.changes.completions_pct,null);
+  }finally{await pg.close();}
+});

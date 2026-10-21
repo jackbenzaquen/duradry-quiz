@@ -8,10 +8,38 @@ const percentage=(n,d)=>d?n/d*100:null;
 const hasStart=s=>!!(s.started_at||s.start_observed);
 const hasCompletion=s=>!!(s.completed_at||s.completion_observed);
 const stepLabels={welcome:'Welcome interaction',gift:'Gift choice',brand:'Brand entered (optional)',dry:'Sweat areas',age:'Age',odor:'Odor areas',gender:'Gender',email:'Email entered',first_name:'First name entered',calculation:'Calculation continued',result:'Result captured'};
+// These dates describe observed records, not continuous tracking coverage.
+export function availabilityFromBounds(bounds,timezone){
+  const date=value=>value?DateTime.fromJSDate(new Date(value),{zone:timezone}).toISODate():null;
+  const sources=bounds.map(b=>({source:b.source,first_record_date:date(b.first_record_at),last_record_date:date(b.last_record_at)}));
+  return {first_record_date:sources.map(s=>s.first_record_date).filter(Boolean).sort()[0]||null,last_record_date:sources.map(s=>s.last_record_date).filter(Boolean).sort().at(-1)||null,sources};
+}
+export function historyAvailability(sessions,{source='all',timezone='America/New_York'}={}){
+  const bounds=new Map();
+  for(const s of sessions){if(s.is_test||(source==='all'&&s.duplicate_of)||(source!=='all'&&s.source!==source))continue;const time=new Date(s.occurred_at).toISOString();const b=bounds.get(s.source)||{source:s.source,first_record_at:time,last_record_at:time};if(time<b.first_record_at)b.first_record_at=time;if(time>b.last_record_at)b.last_record_at=time;bounds.set(s.source,b);}
+  return availabilityFromBounds([...bounds.values()],timezone);
+}
+export function allHistoryWindow(input,availability){
+  const timezone=input.timezone||'America/New_York';
+  const to=DateTime.now().setZone(timezone).minus({days:1}).toISODate();
+  return range({...input,from:availability.first_record_date&&availability.first_record_date<to?availability.first_record_date:to,to});
+}
+export function compareReports(current,previous,availability){
+  current.previous=previous;
+  let reason=null,message=null;
+  if(!previous.summary.sessions){reason='no_prior_records';message='No recorded data in the previous period; no percentage change is shown.';}
+  else if(availability?.first_record_date&&availability.first_record_date>previous.window.from){reason='partial_prior_history';message='The previous period begins before available history; no percentage change is shown.';}
+  else if(Object.keys(current.sources).sort().join(',')!==Object.keys(previous.sources).sort().join(',')){reason='different_sources';message='The periods contain different data sources; no percentage change is shown.';}
+  else if(availability?.sources?.some(s=>(current.sources[s.source]||previous.sources[s.source])&&s.first_record_date>previous.window.from)){reason='partial_source_history';message='At least one source starts partway through these periods; no percentage change is shown.';}
+  current.comparison={status:reason?'unavailable':'available',reason,message};
+  current.changes={completions_pct:!reason&&previous.summary.completions?(current.summary.completions/previous.summary.completions-1)*100:null,completion_rate_pp:reason||current.summary.observed_completion_rate===null||previous.summary.observed_completion_rate===null?null:current.summary.observed_completion_rate-previous.summary.observed_completion_rate};
+  return current;
+}
 export function aggregate(sessions,window,{source='all',answerPopulation='completed',orders=[],questions:questionDefinitions=[],ordersAvailable=false,now=new Date().toISOString()}={}){
   const rows=sessions.filter(s=>!s.is_test&&(source!=='all'||!s.duplicate_of)&&new Date(s.occurred_at)>=new Date(window.start)&&new Date(s.occurred_at)<new Date(window.end)&&(source==='all'||s.source===source));
   const completed=rows.filter(hasCompletion),started=rows.filter(hasStart),trackedCompleted=started.filter(hasCompletion);
   const views=rows.filter(s=>(s.events||[]).some(e=>e.kind==='viewed')).length;
+  const sourceDetails=new Map();
   const days=Object.create(null),results=Object.create(null),sources=Object.create(null),questions=Object.create(null),funnel=Object.create(null);
   for(let d=DateTime.fromISO(window.from,{zone:window.timezone});d<=DateTime.fromISO(window.to,{zone:window.timezone});d=d.plus({days:1}))days[d.toISODate()]={date:d.toISODate(),completions:0,starts:0,observed_completions:0};
   const coverage={completion_only:0,with_start:started.length,with_consent:0,missing_result:0,unknown_result:0};
@@ -19,6 +47,11 @@ export function aggregate(sessions,window,{source='all',answerPopulation='comple
   for(const s of rows){
     const day=DateTime.fromISO(new Date(s.occurred_at).toISOString()).setZone(window.timezone).toISODate();
     sources[s.source]=(sources[s.source]||0)+1;
+    const detail=sourceDetails.get(s.source)||{source:s.source,records:0,completions:0,starts:0,observed_completions:0,completion_only:0,first_record_date:day,last_record_date:day,first_start_date:null,last_start_date:null};
+    detail.records++;detail.first_record_date=day<detail.first_record_date?day:detail.first_record_date;detail.last_record_date=day>detail.last_record_date?day:detail.last_record_date;
+    if(hasStart(s)){detail.starts++;detail.first_start_date=!detail.first_start_date||day<detail.first_start_date?day:detail.first_start_date;detail.last_start_date=!detail.last_start_date||day>detail.last_start_date?day:detail.last_start_date;}
+    if(hasCompletion(s)){detail.completions++;if(hasStart(s))detail.observed_completions++;else detail.completion_only++;}
+    sourceDetails.set(s.source,detail);
     if(hasStart(s)&&days[day])days[day].starts++;
     if(hasCompletion(s)){
       if(days[day]){days[day].completions++;if(hasStart(s))days[day].observed_completions++;}
@@ -45,7 +78,9 @@ export function aggregate(sessions,window,{source='all',answerPopulation='comple
   const rowIds=new Set(rows.map(s=>s.id));const associated=orders.filter(o=>rowIds.has(o.session_id));const revenueByCurrency=Object.create(null);for(const order of associated){revenueByCurrency[order.currency]=(revenueByCurrency[order.currency]||0)+Number(order.amount);}
   duration.sort((a,b)=>a-b);const median=duration.length?(duration[Math.floor((duration.length-1)/2)]+duration[Math.ceil((duration.length-1)/2)])/2:null;
   const identified=completed.filter(s=>s.subject_key);const people=new Set(identified.map(s=>s.subject_key)).size;
-  return {schema_version:4,...reportFunnels(rows,orders,{source,questions:questionDefinitions,now,ordersAvailable}),generated_at:now,window,source,answer_population:answerPopulation,summary:{sessions:rows.length,views:views||null,starts:started.length||null,completions:completed.length,observed_completions:trackedCompleted.length,observed_completion_rate:percentage(trackedCompleted.length,started.length),identified_people:people||null,repeat_identified_completions:identified.length-people,consented_completions:completed.filter(s=>s.email_consent===true).length,consent_rate:percentage(completed.filter(s=>s.email_consent===true).length,coverage.with_consent),median_completion_seconds:median,linked_orders:associated.length||null,linked_revenue:revenueByCurrency},daily:Object.values(days),results:Object.entries(results).map(([label,count])=>({label,count,share:percentage(count,completed.length)})).sort((a,b)=>b.count-a.count),questions:reportQuestions,response_coverage:responseCoverage,funnel:Object.values(funnel).map(f=>({...f,average_seconds:f.timed_responses?f.total_ms/f.timed_responses/1000:null,not_continued:f.viewed-f.answered-f.skipped,not_continued_rate:percentage(f.viewed-f.answered-f.skipped,f.viewed)})),sources,coverage,notes:[
+  const reconciliation={completed_with_start:trackedCompleted.length,started_without_completion:started.length-trackedCompleted.length,completed_without_start:completed.length-trackedCompleted.length,neither_start_nor_completion:rows.length-started.length-completed.length+trackedCompleted.length,without_completion:rows.length-completed.length,identified_completions:identified.length,unidentified_completions:completed.length-identified.length,identified_completers:people};
+  const sourceCoverage=[...sourceDetails.values()].sort((a,b)=>a.source.localeCompare(b.source));
+  return {schema_version:4,reconciliation,source_coverage:sourceCoverage,...reportFunnels(rows,orders,{source,questions:questionDefinitions,now,ordersAvailable}),generated_at:now,window,source,answer_population:answerPopulation,summary:{sessions:rows.length,views:views||null,starts:started.length||null,completions:completed.length,observed_completions:trackedCompleted.length,observed_completion_rate:percentage(trackedCompleted.length,started.length),identified_people:people||null,repeat_identified_completions:identified.length-people,consented_completions:completed.filter(s=>s.email_consent===true).length,consent_rate:percentage(completed.filter(s=>s.email_consent===true).length,coverage.with_consent),median_completion_seconds:median,linked_orders:associated.length||null,linked_revenue:revenueByCurrency},daily:Object.values(days),results:Object.entries(results).map(([label,count])=>({label,count,share:percentage(count,completed.length)})).sort((a,b)=>b.count-a.count),questions:reportQuestions,response_coverage:responseCoverage,funnel:Object.values(funnel).map(f=>({...f,average_seconds:f.timed_responses?f.total_ms/f.timed_responses/1000:null,not_continued:f.viewed-f.answered-f.skipped,not_continued_rate:percentage(f.viewed-f.answered-f.skipped,f.viewed)})),sources,coverage,notes:[
     'Dates use recorded session time for Octane CSV, first event for native sessions, and completion time for Klaviyo-only history. End date includes the full local day.',
     'Observed completion rate uses native starts or CSV welcome interactions. It is a session-based measure, not Octane unique-person conversion; Klaviyo-only history is excluded.',
     'Legacy answer labels remain separate when their mapping to current wording is unverified.',
@@ -61,10 +96,18 @@ export function aggregate(sessions,window,{source='all',answerPopulation='comple
   ]};
 }
 export async function fetchReport(db,input={}){
-  const window=range(input);const source=input.source||'all';if(!['all','native','octane','klaviyo_octane'].includes(source))throw Error('Invalid source');
+  let window=range(input);const source=input.source||'all';if(!['all','native','octane','klaviyo_octane'].includes(source))throw Error('Invalid source');
   const answerPopulation=input.answers||'completed';if(!['all','completed'].includes(answerPopulation))throw Error('Invalid answer population');
   const quiz=input.quiz||'duradry-routine',result=input.result||'';
-  const fromPrevious=input.compare==='false'?window.start:range({...window,...window.previous}).start;
+  const bounds=await db.query(`SELECT s.source,min(s.occurred_at) AS first_record_at,max(s.occurred_at) AS last_record_at
+    FROM quiz_sessions s WHERE s.quiz_id=$1 AND NOT s.is_test AND ($2='all' OR s.source=$2) AND ($3='' OR s.result_key=$3)
+    AND ($2<>'all' OR NOT EXISTS(SELECT 1 FROM quiz_session_links l WHERE l.duplicate_id=s.id))
+    AND (s.source<>'klaviyo_octane' OR $2<>'all' OR NOT EXISTS(SELECT 1 FROM quiz_source_coverage c WHERE c.quiz_id=s.quiz_id AND c.source='octane' AND s.occurred_at>=c.from_at AND s.occurred_at<c.to_at))
+    GROUP BY s.source`,[quiz,source,result]);
+  const availability=availabilityFromBounds(bounds,window.timezone);
+  if(input.period==='all')window=allHistoryWindow(input,availability);
+  const compareRequested=input.compare!=='false'&&input.period!=='all';
+  const fromPrevious=compareRequested?range({...window,...window.previous}).start:window.start;
   const rows=await db.query(`SELECT s.id,s.source,s.quiz_id,s.version,s.occurred_at,s.started_at,s.completed_at,s.subject_key,s.answers,s.result_key,s.email_consent,s.is_test,s.start_observed,s.completion_observed,s.response_flags,
     COALESCE((SELECT jsonb_agg(jsonb_build_object('kind',e.kind,'question_key',e.question_key,'elapsed_ms',e.elapsed_ms)) FROM quiz_events e WHERE e.session_id=s.id),'[]') AS events
     FROM quiz_sessions s WHERE s.occurred_at >= $1 AND s.occurred_at < $2 AND s.quiz_id=$3 AND NOT s.is_test
@@ -82,6 +125,7 @@ export async function fetchReport(db,input={}){
   const ordersAvailable=orderCheck?.status==='ok'&&orderCheck.details?.complete===true&&Date.now()-Date.parse(orderCheck.checked_at)<15*60000;
   const [orderState]=await db.query("SELECT payload FROM quiz_sync_state WHERE key='orders'");
   const current=aggregate(rows,window,{source,answerPopulation,orders:orderRows,questions,ordersAvailable});
+  current.availability=availability;current.period=input.period==='all'?'all':'custom';current.comparison={status:'off',reason:input.period==='all'?'all_history':'not_requested',message:input.period==='all'?'All available history through yesterday; comparison is off.':null};
   current.revenue=revenueSeries(orderRows,window,{source,available:ordersAvailable&&['native','all'].includes(source)});
   current.revenue.coverage_from=orderState?.payload?.coverage_from||null;
   current.revenue.synced_through=orderState?.payload?.to||null;
@@ -91,6 +135,6 @@ export async function fetchReport(db,input={}){
   const snapshots=await db.query('SELECT payload FROM quiz_reference_snapshots WHERE quiz_id=$1 ORDER BY captured_at DESC LIMIT 1',[quiz]);
   current.reference_snapshot=snapshots[0]?.payload||null;
   current.sync=sync;current.filters={quiz,result,source,answers:answerPopulation};
-  if(input.compare!=='false'){current.previous=aggregate(rows,range({...window,...window.previous}),{source,answerPopulation,orders:orderRows,questions,ordersAvailable});current.changes={completions_pct:current.previous.summary.completions?(current.summary.completions/current.previous.summary.completions-1)*100:null,completion_rate_pp:current.summary.observed_completion_rate===null||current.previous.summary.observed_completion_rate===null?null:current.summary.observed_completion_rate-current.previous.summary.observed_completion_rate};}
+  if(compareRequested)compareReports(current,aggregate(rows,range({...window,...window.previous}),{source,answerPopulation,orders:orderRows,questions,ordersAvailable}),availability);
   return current;
 }
