@@ -10,5 +10,5 @@ const first=rows.map(r=>r.occurred_at).sort()[0],latest=rows.map(r=>r.occurred_a
 const css=await fs.readFile(new URL('../public/styles.css',import.meta.url),'utf8'),js=await fs.readFile(new URL('../public/dashboard.js',import.meta.url),'utf8');
 let html=await fs.readFile(new URL('../public/index.html',import.meta.url),'utf8');
 const data=JSON.stringify({meta:{first,latest,raw_records:rows.length,exact_linked_events:links.length},rows,reference}).replaceAll('<','\\u003c');
-html=html.replace('<link rel="stylesheet" href="/styles.css">',()=>'<style>'+css+'</style>').replace('<script src="/dashboard.js"></script>',()=>`<script>const saved=${data};window.DQ_META=saved.meta;window.DQ_DATA=saved.rows;window.DQ_REFERENCE=saved.reference;</script><script>${js.replaceAll('</script','<\\/script')}</script>`);
+html=html.replace(/<link rel="stylesheet" href="\/styles\.css(?:\?[^"]*)?">/,()=>'<style>'+css+'</style>').replace(/<script src="\/dashboard\.js(?:\?[^"]*)?"><\/script>/,()=>`<script>const saved=${data};window.DQ_META=saved.meta;window.DQ_DATA=saved.rows;window.DQ_REFERENCE=saved.reference;</script><script>${js.replaceAll('</script','<\\/script')}</script>`);
 await fs.writeFile(output,html);console.log('Built private report with '+rows.length+' source records and '+links.length+' exact-match exclusions. No dedicated contact fields.');
