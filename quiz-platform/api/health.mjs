@@ -2,6 +2,7 @@ import {getDb} from '../lib/db.mjs';
 import {authorized,equal,json,sameOrigin} from '../lib/security.mjs';
 import {healthSnapshot,runHealthChecks} from '../lib/health.mjs';
 import {randomUUID} from 'node:crypto';
+import {monitoringSnapshot} from '../lib/monitoring.mjs';
 export const config={maxDuration:60};
 export default async function handler(req,res){
   const cron=process.env.CRON_SECRET?.length>=32&&equal(req.headers.authorization,'Bearer '+process.env.CRON_SECRET);
@@ -15,8 +16,15 @@ export default async function handler(req,res){
       locked=locks.length>0;
     }
     const result=await (locked?runHealthChecks(db):healthSnapshot(db));
+    // Only the authenticated scheduled worker publishes operational evidence.
+    // Dashboard reads do not flood logs; public requests remain unauthorized.
+    if(cron&&locked){
+      try{console.info('Quiz monitoring snapshot '+JSON.stringify(await monitoringSnapshot(db,result)));}
+      catch{console.error('Quiz monitoring snapshot unavailable');}
+    }
     if(result.status!=='ok')console.warn('Quiz health',JSON.stringify({status:result.status,checks:result.checks.filter(c=>c.status!=='ok').map(c=>c.key)}));
     return json(res,200,result);
   }catch{console.error('Quiz health check failed');return json(res,503,{status:'error',error:'Health check unavailable; inspect database and deployment configuration.'});}
   finally{if(locked)await db.query("DELETE FROM quiz_locks WHERE key='health' AND token=$1",[token]).catch(()=>{});}
 }
+
